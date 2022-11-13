@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 206 2022-10-27 00:02:17Z rhubarb-geek-nz $
+# $Id: package.sh 211 2022-11-12 01:51:19Z rhubarb-geek-nz $
 #
 
 . /etc/os-release
@@ -34,7 +34,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.2.7
+	VERSION=7.3.0
 fi
 
 REPOS="https://github.com/PowerShell/PowerShell/releases/download/v${VERSION}"
@@ -210,6 +210,10 @@ SRCPKG="${SRCPKG}.deleted"
 	cd "$DN"
 	tar xfz -
 	ls -ld "./pwsh"
+	if test ! -x "./pwsh"
+	then
+		chmod +x "./pwsh"
+	fi
 	ldd "./pwsh"
 	"./pwsh" -Version
 	ACTUALVERS=$("./pwsh" -Version | while read A B C; do echo $B; break; done)

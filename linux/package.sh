@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 216 2023-01-07 04:25:34Z rhubarb-geek-nz $
+# $Id: package.sh 227 2023-01-27 22:54:47Z rhubarb-geek-nz $
 #
 
 . /etc/os-release
@@ -34,7 +34,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.3.1
+	VERSION=7.3.2
 fi
 
 REPOS="https://github.com/PowerShell/PowerShell/releases/download/v${VERSION}"

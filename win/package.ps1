@@ -103,7 +103,8 @@ If(!(test-path -PathType container "$SRCDIR"))
     <ComponentGroup Id="ProductComponents">
       <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="yes">
         <File Id="pwsh.exe" KeyPath="yes" Source="src\pwsh.exe" />
-      </Component>    </ComponentGroup>
+      </Component>
+    </ComponentGroup>
   </Fragment>
 </Wix>
 '@ | dotnet "$DIR2WXS" -o "PowerShell.wxs" -s "$SRCDIR"

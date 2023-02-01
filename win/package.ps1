@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 237 2023-01-31 23:24:01Z rhubarb-geek-nz $
+# $Id: package.ps1 238 2023-02-01 20:38:10Z rhubarb-geek-nz $
 #
 
 $POWERSHELL_VERSION = "7.3.2"
@@ -34,16 +34,15 @@ trap
 	throw $PSItem
 }
 
-$path = "src"
-If(!(test-path -PathType container $path))
+If(!(test-path -PathType container "$SRCDIR"))
 {
-	$Null = New-Item -ItemType Directory -Path $path
+	$Null = New-Item -ItemType Directory -Path "$SRCDIR"
 
 	Write-Host "$URL"
 
 	Invoke-WebRequest -Uri "$URL" -OutFile "$ZIPFILE"
 
-	Expand-Archive -LiteralPath "$ZIPFILE" -DestinationPath "$path"
+	Expand-Archive -LiteralPath "$ZIPFILE" -DestinationPath "$SRCDIR"
 }
 
 @'
@@ -70,7 +69,21 @@ If(!(test-path -PathType container $path))
     </DirectoryRef>
     <Feature Id="PathFeature" Title="PATH" Level="1" Absent="disallow" AllowAdvertise="no" Display="hidden" >
       <ComponentRef Id="setEnviroment"/>
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="pwsh.exe" />
     </Feature>
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="{D4A0639B-7BDD-4912-9489-FB8D227D507C}">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="PowerShell 7 (arm64)"
+                  Description="PowerShell 7.3.2 for ARM64"
+                  Target="[#pwsh.exe]"
+                  Arguments="-WorkingDirectory ~"
+                  WorkingDirectory="INSTALLDIR"/>
+        <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\Microsoft\PowerShell7" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
   </Product>
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -81,14 +94,16 @@ If(!(test-path -PathType container $path))
           </Directory>
         </Directory>
       </Directory>
+      <Directory Id="ProgramMenuFolder" Name="ProgramMenuFolder" >
+        <Directory Id="ApplicationProgramsFolder" Name="PowerShell 7"/>
+      </Directory>
     </Directory>
   </Fragment>
   <Fragment>
     <ComponentGroup Id="ProductComponents">
-      <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="yes" >
-        <File Id="pwsh.exe" KeyPath="yes" />
-      </Component>
-    </ComponentGroup>
+      <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="yes">
+        <File Id="pwsh.exe" KeyPath="yes" Source="src\pwsh.exe" />
+      </Component>    </ComponentGroup>
   </Fragment>
 </Wix>
 '@ | dotnet "$DIR2WXS" -o "PowerShell.wxs" -s "$SRCDIR"
@@ -105,7 +120,7 @@ If ( $LastExitCode -ne 0 )
 	Exit $LastExitCode
 }
 
-& "$ENV:WIX/bin/light.exe" -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" "PowerShell.wixobj" -ext WixUtilExtension
+& "$ENV:WIX/bin/light.exe" -sw1076 -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" "PowerShell.wixobj" -ext WixUtilExtension
 
 If ( $LastExitCode -ne 0 )
 {

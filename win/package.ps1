@@ -17,17 +17,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 240 2023-02-11 20:59:48Z rhubarb-geek-nz $
+# $Id: package.ps1 241 2023-02-11 21:34:01Z rhubarb-geek-nz $
 #
 
 $POWERSHELL_VERSION = "7.3.2"
 $ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
 $URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
 $SRCDIR = "src"
-$PROJECTDIR = "..\..\project"
-$PROJECTDIR = "..\..\msvs2022\toolbox2"
-$PROJECTDIR = "..\..\..\rhubarb-pi-code\trunk\project"
-$DIR2WXS = "$PROJECTDIR\dir2wxs\bin\Release\net6.0\dir2wxs.dll"
+$DIR2WXS = "dir2wxs\bin\Release\net6.0\dir2wxs.dll"
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"

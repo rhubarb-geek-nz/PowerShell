@@ -17,14 +17,17 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 238 2023-02-01 20:38:10Z rhubarb-geek-nz $
+# $Id: package.ps1 240 2023-02-11 20:59:48Z rhubarb-geek-nz $
 #
 
 $POWERSHELL_VERSION = "7.3.2"
 $ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
 $URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
 $SRCDIR = "src"
-$DIR2WXS = "dir2wxs\bin\Release\net6.0\dir2wxs.dll"
+$PROJECTDIR = "..\..\project"
+$PROJECTDIR = "..\..\msvs2022\toolbox2"
+$PROJECTDIR = "..\..\..\rhubarb-pi-code\trunk\project"
+$DIR2WXS = "$PROJECTDIR\dir2wxs\bin\Release\net6.0\dir2wxs.dll"
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -88,10 +91,8 @@ If(!(test-path -PathType container "$SRCDIR"))
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLCOMPANY" Name="Microsoft">
-          <Directory Id="INSTALLPRODUCT" Name="PowerShell">
-            <Directory Id="INSTALLDIR" Name="7" />
-          </Directory>
+        <Directory Id="INSTALLPRODUCT" Name="PowerShell">
+          <Directory Id="INSTALLDIR" Name="7" />
         </Directory>
       </Directory>
       <Directory Id="ProgramMenuFolder" Name="ProgramMenuFolder" >

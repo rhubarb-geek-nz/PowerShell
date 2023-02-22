@@ -34,7 +34,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.2.8
+	VERSION=7.2.9
 fi
 
 REPOS="https://github.com/PowerShell/PowerShell/releases/download/v${VERSION}"

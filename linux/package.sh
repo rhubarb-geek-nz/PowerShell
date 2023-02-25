@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 227 2023-01-27 22:54:47Z rhubarb-geek-nz $
+# $Id: package.sh 242 2023-02-24 07:11:42Z rhubarb-geek-nz $
 #
 
 . /etc/os-release
@@ -34,7 +34,17 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.3.2
+	VERSION=7.3.3
+fi
+
+if test -z "$MAINTAINER"
+then
+	if git config user.email > /dev/null
+	then
+		MAINTAINER="$(git config user.email)"
+	else
+		MAINTAINER="$LOGNAME@$HOSTNAME"
+	fi
 fi
 
 REPOS="https://github.com/PowerShell/PowerShell/releases/download/v${VERSION}"
@@ -221,12 +231,13 @@ SRCPKG="${SRCPKG}.deleted"
 
 LENDATA=`du -sk data`
 LENDATA=`first ${LENDATA}`
+MAINTORIG=
 
 if test -f control/control
 then
 	LENORIG=
 
-	while read A B C
+	while read A B
 	do
 		case "$A" in
 		Installed-Size: )
@@ -241,6 +252,9 @@ then
 		Package: )
 			PACKAGE="$B"
 			;;
+		Maintainer: )
+			MAINTORIG="$B"
+			;;
 		* )
 			;;
 		esac
@@ -251,6 +265,12 @@ then
 
 	sed "s/Architecture: ${ARCHORIG}/Architecture: ${ARCHDPKG}/" <control/control >control/control.arch
 	mv control/control.arch control/control
+
+	if test -n "$MAINTORIG"
+	then
+		sed "s/Maintainer: ${MAINTORIG}/Maintainer: ${MAINTAINER}/" <control/control >control/control.maint
+		mv control/control.maint control/control
+	fi
 fi
 
 if test -f control/md5sums
@@ -306,7 +326,7 @@ Group: shells
 License: MIT LICENSE
 Vendor: Microsoft Corporation
 URL: https://microsoft.com/powershell
-Packager: PowerShell Team <PowerShellTeam@hotmail.com>
+Packager: $MAINTAINER
 Autoreq: 0
 AutoReqProv: no
 Prefix: /

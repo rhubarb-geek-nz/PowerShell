@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 242 2023-02-24 07:11:42Z rhubarb-geek-nz $
+# $Id: package.sh 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
 #
 
 . /etc/os-release
@@ -34,7 +34,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.3.3
+	VERSION=7.3.4
 fi
 
 if test -z "$MAINTAINER"

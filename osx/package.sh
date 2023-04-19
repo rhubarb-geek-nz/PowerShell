@@ -17,10 +17,10 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 244 2023-02-25 09:28:29Z rhubarb-geek-nz $
+# $Id: package.sh 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
 #
 
-VERSION=7.3.3
+VERSION=7.3.4
 ARCH=arm64
 PKGNAME=powershell
 LAUNCHER=Applications/PowerShell.app/Contents/MacOS/PowerShell.sh

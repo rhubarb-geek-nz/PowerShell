@@ -34,7 +34,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.3.4
+	VERSION=7.3.9
 fi
 
 if test -z "$MAINTAINER"

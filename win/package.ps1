@@ -20,7 +20,7 @@
 # $Id: package.ps1 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
 #
 
-$POWERSHELL_VERSION = "7.3.10"
+$POWERSHELL_VERSION = "7.4.0"
 $ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
 $URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
 $SRCDIR = "src"
@@ -48,14 +48,14 @@ If(!(test-path -PathType container "$SRCDIR"))
 @'
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="7.3.10.0" Manufacturer="Microsoft Corporation" UpgradeCode="31AB5147-9A97-4452-8443-D9709F0516E1">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell 7.3.10 ARM64" Comments="PowerShell 7.3.10 ARM64" />
+  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="7.4.0.0" Manufacturer="Microsoft Corporation" UpgradeCode="31AB5147-9A97-4452-8443-D9709F0516E1">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell 7.4.0 ARM64" Comments="PowerShell 7.4.0 ARM64" />
     <MediaTemplate EmbedCab="yes" />
     <Feature Id="ProductFeature" Title="setup" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
     <Upgrade Id="{31AB5147-9A97-4452-8443-D9709F0516E1}">
-      <UpgradeVersion Maximum="7.3.10.0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
+      <UpgradeVersion Maximum="7.4.0.0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallInitialize" />
@@ -76,7 +76,7 @@ If(!(test-path -PathType container "$SRCDIR"))
       <Component Id="ApplicationShortcut" Guid="{D4A0639B-7BDD-4912-9489-FB8D227D507C}">
         <Shortcut Id="ApplicationStartMenuShortcut"
                   Name="PowerShell 7 (arm64)"
-                  Description="PowerShell 7.3.10 for ARM64"
+                  Description="PowerShell 7.4.0 for ARM64"
                   Target="[#pwsh.exe]"
                   Arguments="-WorkingDirectory ~"
                   WorkingDirectory="INSTALLDIR"/>

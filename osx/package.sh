@@ -20,7 +20,7 @@
 # $Id: package.sh 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
 #
 
-VERSION=7.3.9
+VERSION=7.3.10
 ARCH=arm64
 PKGNAME=powershell
 LAUNCHER=Applications/PowerShell.app/Contents/MacOS/PowerShell.sh

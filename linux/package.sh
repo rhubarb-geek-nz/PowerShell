@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.sh 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
+# $Id: package.sh 262 2023-11-29 10:55:07Z rhubarb-geek-nz $
 #
 
 . /etc/os-release
@@ -186,6 +186,32 @@ case "${SRCPKG}" in
 				;;
 			esac
 		done
+		if test -f control/postinst
+		then
+			ARCHLINUXGNU=
+			BASELIB64=
+
+			case "$ARCHDPKG" in
+				armhf )
+					ARCHLINUXGNU=arm-linux-gnueabihf
+					BASELIB64=lib
+					;;
+				arm64 )
+					ARCHLINUXGNU=aarch64-linux-gnu
+					;;
+				* )
+					;;
+			esac
+
+			if test -n "$ARCHLINUXGNU"
+			then
+				sed -i "s/x86_64-linux-gnu/$ARCHLINUXGNU/g" control/postinst
+			fi
+			if test -n "$BASELIB64"
+			then
+				sed -i "s/lib64/$BASELIB64/g" control/postinst
+			fi
+		fi
 		;;
 	*.rpm )
 		MAKE_RPM=true
@@ -323,7 +349,7 @@ Name: $PACKAGE
 Version: $VERSION
 Release: $RELEASE
 Group: shells
-License: MIT LICENSE
+License: MIT
 Vendor: Microsoft Corporation
 URL: https://microsoft.com/powershell
 Packager: $MAINTAINER

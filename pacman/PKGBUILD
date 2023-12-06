@@ -1,0 +1,127 @@
+# Maintainer: rhubarb-geek-nz@users.sourceforge.net
+pkgname=powershell
+pkgver=7.4.0
+pkgrel=1
+epoch=
+pkgdesc="PowerShell is an automation and configuration management platform."
+arch=("$CARCH")
+url="https://github.com/PowerShell/PowerShell"
+license=('MIT')
+groups=()
+depends=('glibc' 'gcc-libs' 'krb5' 'pam' 'zlib' 'lttng-ust2.12')
+makedepends=()
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+install=
+changelog=
+noextract=()
+md5sums=()
+validpgpkeys=()
+
+prepare() {
+	mkdir "$pkgname-$pkgver"
+
+	(
+		cd "$pkgname-$pkgver"
+
+		case "$arch" in
+			arm* )
+				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm32.tar.gz"
+				CHK=6A5B31EF2A4976AA20E5E39A47ACAB0575F189C8D66895C0E341D6E2A6442681
+				;;
+			aarch64 )
+				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm64.tar.gz"
+				CHK=13D317610BA133C002990C40622A886989368460451809861F378C25730989F4
+				;;
+			x86_64 )
+				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-x64.tar.gz"
+				CHK=AA82C3E9241503B52DB1827E3FD7FC099DA74F828BA032E9B726E50C72B4BEE5
+				;;
+			* )
+				false
+				;;
+		esac
+
+		echo Loading "$URL"
+
+		curl "$URL" --location --fail --silent --output pwsh.tar.gz
+
+		ACT=$(sha256sum pwsh.tar.gz | tr "[:lower:]" "[:upper:]" | while read A B; do echo $A; break; done)
+	
+		if test "$ACT" != "$CHK"
+		then
+			echo "$ACT" != "$CHK"
+			exit 1
+		fi
+
+		URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell_$pkgver-1.deb_amd64.deb"
+		CHK=550331E243A7311E1BF0CA83D8C96C5E78BA82A765C4A9BA34AA0DB6EB9A9F22
+
+		echo Loading "$URL"
+
+		curl "$URL" --location --fail --silent --output pwsh.deb
+
+		ACT=$(sha256sum pwsh.deb | tr "[:lower:]" "[:upper:]" | while read A B; do echo $A; break; done)
+
+		if test "$ACT" != "$CHK"
+		then
+			echo "$ACT" != "$CHK"
+			exit 1
+		fi
+	)
+}
+
+build() {
+	cd "$pkgname-$pkgver"
+
+	ar t pwsh.deb | while read N
+	do
+		case "$N" in
+			data.tar.xz )
+				ar p pwsh.deb "$N" | ( mkdir data ; cd data ; tar xfJ - )
+				;;
+			data.tar.gz )
+				ar p pwsh.deb "$N" | ( mkdir data ; cd data ; tar xfz - )
+				;;
+			* )
+				;;
+		esac
+	done
+
+	(
+		mkdir pwsh
+		cd pwsh
+		tar xfz ../pwsh.tar.gz
+	)
+}
+
+check() {
+	pwd
+	test -d "$pkgname-$pkgver/data"
+	test -d "$pkgname-$pkgver/pwsh"
+}
+
+package() {
+	find "$pkgname-$pkgver/pwsh" -type f | xargs chmod -x 
+	chmod +x "$pkgname-$pkgver/pwsh/pwsh"
+	"$pkgname-$pkgver/pwsh/pwsh" -Version
+	mkdir -p "$pkgdir"
+	mv "$pkgname-$pkgver/data"/* "$pkgdir/"
+	find "$pkgdir/" -name man
+	if test -d "$pkgdir/usr/local/share/man"
+	then
+		if test ! -d "$pkgdir/usr/share/man"
+		then
+			mv "$pkgdir/usr/local/share/man" "$pkgdir/usr/share/man"
+		fi
+	fi
+	rm -rf "$pkgdir/usr/local"
+	find "$pkgdir" -type d
+	rm -rf "$pkgdir/opt/microsoft/powershell/7"
+	mv "$pkgname-$pkgver/pwsh" "$pkgdir/opt/microsoft/powershell/7"
+}

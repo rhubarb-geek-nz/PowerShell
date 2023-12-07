@@ -17,14 +17,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 250 2023-04-15 06:28:32Z rhubarb-geek-nz $
+# $Id: package.ps1 270 2023-12-07 22:31:39Z rhubarb-geek-nz $
 #
 
 $POWERSHELL_VERSION = "7.4.0"
 $ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
 $URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
 $SRCDIR = "src"
-$DIR2WXS = "dir2wxs\bin\Release\net6.0\dir2wxs.dll"
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
@@ -33,6 +32,8 @@ trap
 {
 	throw $PSItem
 }
+
+dotnet tool restore
 
 If(!(test-path -PathType container "$SRCDIR"))
 {
@@ -105,7 +106,7 @@ If(!(test-path -PathType container "$SRCDIR"))
     </ComponentGroup>
   </Fragment>
 </Wix>
-'@ | dotnet "$DIR2WXS" -o "PowerShell.wxs" -s "$SRCDIR"
+'@ | dotnet dir2wxs -o "PowerShell.wxs" -s "$SRCDIR"
 
 If ( $LastExitCode -ne 0 )
 {
@@ -120,6 +121,13 @@ If ( $LastExitCode -ne 0 )
 }
 
 & "$ENV:WIX/bin/light.exe" -sw1076 -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" "PowerShell.wixobj" -ext WixUtilExtension
+
+If ( $LastExitCode -ne 0 )
+{
+	Exit $LastExitCode
+}
+
+& signtool sign /a /sha1 601A8B683F791E51F647D34AD102C38DA4DDB65F /fd SHA256 /t http://timestamp.digicert.com "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"
 
 If ( $LastExitCode -ne 0 )
 {

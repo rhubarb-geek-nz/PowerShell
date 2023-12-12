@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 270 2023-12-07 22:31:39Z rhubarb-geek-nz $
+# $Id: package.ps1 284 2023-12-12 10:22:24Z rhubarb-geek-nz $
 #
 
 $POWERSHELL_VERSION = "7.4.0"
@@ -34,6 +34,11 @@ trap
 }
 
 dotnet tool restore
+
+If ( $LastExitCode -ne 0 )
+{
+	Exit $LastExitCode
+}
 
 If(!(test-path -PathType container "$SRCDIR"))
 {
@@ -127,9 +132,11 @@ If ( $LastExitCode -ne 0 )
 	Exit $LastExitCode
 }
 
-& signtool sign /a /sha1 601A8B683F791E51F647D34AD102C38DA4DDB65F /fd SHA256 /t http://timestamp.digicert.com "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"
+$codeSignCertificate = Get-ChildItem -path Cert:\ -Recurse -CodeSigningCert | Where-Object {$_.Thumbprint -eq '601A8B683F791E51F647D34AD102C38DA4DDB65F'}
 
-If ( $LastExitCode -ne 0 )
+if ( -not $codeSignCertificate )
 {
-	Exit $LastExitCode
+	throw 'Codesign certificate not found'
 }
+
+Set-AuthenticodeSignature -Certificate $codeSignCertificate -TimestampServer 'http://timestamp.digicert.com' -HashAlgorithm SHA256 -FilePath "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"

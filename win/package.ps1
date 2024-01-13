@@ -18,7 +18,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 
-$POWERSHELL_VERSION = '7.3.11'
+$POWERSHELL_VERSION = '7.2.18'
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'

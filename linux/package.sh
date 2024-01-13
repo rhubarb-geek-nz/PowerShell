@@ -24,7 +24,7 @@ PACKAGE=powershell
 USCORE=_
 SRCPKG="${PACKAGE}.pkg"
 SRCTAR="${PACKAGE}.tar"
-VERSION=7.3.11
+VERSION=7.2.18
 MAKE_RPM=false
 MAKE_DEB=false
 

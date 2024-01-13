@@ -17,10 +17,8 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
-# $Id: package.ps1 284 2023-12-12 10:22:24Z rhubarb-geek-nz $
-#
 
-$POWERSHELL_VERSION = "7.4.0"
+$POWERSHELL_VERSION = "7.4.1"
 $ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
 $URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
 $SRCDIR = "src"

@@ -1,8 +1,8 @@
 #!/bin/sh -e
 #
-#  Copyright 2020, Roger Brown
+#  Copyright 2024, Roger Brown
 #
-#  This file is part of rhubarb pi.
+#  This file is part of rhubarbi-geek-nz/PowerShell.
 #
 #  This program is free software: you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
@@ -18,7 +18,13 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 
-VERSION=7.4.1
+VERSION="$1"
+
+if test -z "$VERSION"
+then
+	VERSION=$(curl -s https://api.github.com/repos/PowerShell/PowerShell/releases/latest | grep "^  \"tag_name\": \"v" | sed "s/  \"tag_name\": \"v//" | sed "s/\",//")
+fi
+
 ARCH=arm64
 PKGNAME=powershell
 LAUNCHER=Applications/PowerShell.app/Contents/MacOS/PowerShell.sh

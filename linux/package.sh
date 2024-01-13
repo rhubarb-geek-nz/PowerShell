@@ -2,7 +2,7 @@
 #
 #  Copyright 2020, Roger Brown
 #
-#  This file is part of rhubarb pi.
+#  This file is part of rhubarbi-geek-nz/PowerShell.
 #
 #  This program is free software: you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
@@ -32,7 +32,7 @@ umask 022
 
 if test -z "$VERSION"
 then
-	VERSION=7.4.1
+	VERSION=$(curl -s https://api.github.com/repos/PowerShell/PowerShell/releases/latest | grep "^  \"tag_name\": \"v" | sed "s/  \"tag_name\": \"v//" | sed "s/\",//")
 fi
 
 if test -z "$MAINTAINER"

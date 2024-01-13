@@ -2,7 +2,7 @@
 #
 #  Copyright 2023, Roger Brown
 #
-#  This file is part of rhubarb pi.
+#  This file is part of rhubarbi-geek-nz/PowerShell.
 #
 #  This program is free software: you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the
@@ -18,18 +18,30 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 #
 
-$POWERSHELL_VERSION = "7.4.1"
-$ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
-$URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
-$SRCDIR = "src"
+param(
+	$POWERSHELL_VERSION = 'latest'
+)
 
-$ErrorActionPreference = "Stop"
-$ProgressPreference = "SilentlyContinue"
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 
 trap
 {
 	throw $PSItem
 }
+
+if ( $POWERSHELL_VERSION -eq 'latest' )
+{
+	$POWERSHELL_VERSION = ((Invoke-WebRequest -Uri 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest').Content | ConvertFrom-JSON -AsHashTable)['tag_name']
+	if ($POWERSHELL_VERSION[0] -eq 'v')
+	{
+		$POWERSHELL_VERSION = $POWERSHELL_VERSION.Substring(1)
+	}
+}
+
+$ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
+$URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
+$SRCDIR = "src-$POWERSHELL_VERSION"
 
 dotnet tool restore
 
@@ -38,28 +50,33 @@ If ( $LastExitCode -ne 0 )
 	Exit $LastExitCode
 }
 
-If(!(test-path -PathType container "$SRCDIR"))
+If (Test-Path -LiteralPath $SRCDIR -PathType container)
 {
-	$Null = New-Item -ItemType Directory -Path "$SRCDIR"
-
-	Write-Host "$URL"
-
-	Invoke-WebRequest -Uri "$URL" -OutFile "$ZIPFILE"
-
-	Expand-Archive -LiteralPath "$ZIPFILE" -DestinationPath "$SRCDIR"
+	Remove-Item -LiteralPath $SRCDIR -Recurse
 }
 
+If ( -not (Test-Path -LiteralPath $ZIPFILE ))
+{
+	Write-Host "$URL"
+
+	Invoke-WebRequest -Uri $URL -OutFile $ZIPFILE
+}
+
+	Expand-Archive -LiteralPath $ZIPFILE -DestinationPath $SRCDIR
+
+try
+{
 @'
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="7.4.1.0" Manufacturer="Microsoft Corporation" UpgradeCode="31AB5147-9A97-4452-8443-D9709F0516E1">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell 7.4.1 ARM64" Comments="PowerShell 7.4.1 ARM64" />
+  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="$(POWERSHELL_VERSION).0" Manufacturer="Microsoft Corporation" UpgradeCode="31AB5147-9A97-4452-8443-D9709F0516E1">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell $(POWERSHELL_VERSION) ARM64" Comments="PowerShell $(POWERSHELL_VERSION) ARM64" />
     <MediaTemplate EmbedCab="yes" />
     <Feature Id="ProductFeature" Title="setup" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
     <Upgrade Id="{31AB5147-9A97-4452-8443-D9709F0516E1}">
-      <UpgradeVersion Maximum="7.4.1.0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
+      <UpgradeVersion Maximum="$(POWERSHELL_VERSION).0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallInitialize" />
@@ -80,7 +97,7 @@ If(!(test-path -PathType container "$SRCDIR"))
       <Component Id="ApplicationShortcut" Guid="{D4A0639B-7BDD-4912-9489-FB8D227D507C}">
         <Shortcut Id="ApplicationStartMenuShortcut"
                   Name="PowerShell 7 (arm64)"
-                  Description="PowerShell 7.4.1 for ARM64"
+                  Description="PowerShell $(POWERSHELL_VERSION) for ARM64"
                   Target="[#pwsh.exe]"
                   Arguments="-WorkingDirectory ~"
                   WorkingDirectory="INSTALLDIR"/>
@@ -104,37 +121,42 @@ If(!(test-path -PathType container "$SRCDIR"))
   <Fragment>
     <ComponentGroup Id="ProductComponents">
       <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="yes">
-        <File Id="pwsh.exe" KeyPath="yes" Source="src\pwsh.exe" />
+        <File Id="pwsh.exe" KeyPath="yes" Source="$(SRCDIR)\pwsh.exe" />
       </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>
-'@ | dotnet dir2wxs -o "PowerShell.wxs" -s "$SRCDIR"
+'@.Replace('$(POWERSHELL_VERSION)',$POWERSHELL_VERSION).Replace('$(SRCDIR)',$SRCDIR) | dotnet dir2wxs -o "PowerShell.wxs" -s "$SRCDIR"
 
-If ( $LastExitCode -ne 0 )
-{
-	Exit $LastExitCode
+	If ( $LastExitCode -ne 0 )
+	{
+		Exit $LastExitCode
+	}
+
+	& "$ENV:WIX/bin/candle.exe" -nologo "PowerShell.wxs" -ext WixUtilExtension 
+
+	If ( $LastExitCode -ne 0 )
+	{
+		Exit $LastExitCode
+	}
+
+	& "$ENV:WIX/bin/light.exe" -sw1076 -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" 'PowerShell.wixobj' -ext WixUtilExtension
+
+	If ( $LastExitCode -ne 0 )
+	{
+		Exit $LastExitCode
+	}
+
+	$codeSignCertificate = Get-ChildItem -path Cert:\ -Recurse -CodeSigningCert | Where-Object {$_.Thumbprint -eq '601A8B683F791E51F647D34AD102C38DA4DDB65F'}
+
+	if ( -not $codeSignCertificate )
+	{
+		throw 'Codesign certificate not found'
+	}
+
+	Set-AuthenticodeSignature -Certificate $codeSignCertificate -TimestampServer 'http://timestamp.digicert.com' -HashAlgorithm SHA256 -FilePath "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"
 }
-
-& "$ENV:WIX/bin/candle.exe" -nologo "PowerShell.wxs" -ext WixUtilExtension 
-
-If ( $LastExitCode -ne 0 )
+finally
 {
-	Exit $LastExitCode
+	Remove-Item -LiteralPath $SRCDIR -Recurse
 }
-
-& "$ENV:WIX/bin/light.exe" -sw1076 -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" "PowerShell.wixobj" -ext WixUtilExtension
-
-If ( $LastExitCode -ne 0 )
-{
-	Exit $LastExitCode
-}
-
-$codeSignCertificate = Get-ChildItem -path Cert:\ -Recurse -CodeSigningCert | Where-Object {$_.Thumbprint -eq '601A8B683F791E51F647D34AD102C38DA4DDB65F'}
-
-if ( -not $codeSignCertificate )
-{
-	throw 'Codesign certificate not found'
-}
-
-Set-AuthenticodeSignature -Certificate $codeSignCertificate -TimestampServer 'http://timestamp.digicert.com' -HashAlgorithm SHA256 -FilePath "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"

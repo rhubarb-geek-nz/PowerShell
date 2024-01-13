@@ -24,16 +24,11 @@ PACKAGE=powershell
 USCORE=_
 SRCPKG="${PACKAGE}.pkg"
 SRCTAR="${PACKAGE}.tar"
-VERSION="$1"
+VERSION=7.3.11
 MAKE_RPM=false
 MAKE_DEB=false
 
 umask 022
-
-if test -z "$VERSION"
-then
-	VERSION=$(curl -s https://api.github.com/repos/PowerShell/PowerShell/releases/latest | grep "^  \"tag_name\": \"v" | sed "s/  \"tag_name\": \"v//" | sed "s/\",//")
-fi
 
 if test -z "$MAINTAINER"
 then

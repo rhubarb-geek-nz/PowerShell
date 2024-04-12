@@ -1,6 +1,6 @@
 # Maintainer: rhubarb-geek-nz@users.sourceforge.net
 pkgname=powershell
-pkgver=7.4.1
+pkgver=7.4.2
 pkgrel=1
 epoch=
 pkgdesc="PowerShell is an automation and configuration management platform."
@@ -32,15 +32,15 @@ prepare() {
 		case "$arch" in
 			arm* )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm32.tar.gz"
-				CHK=BA66844392026779145C10A72D9B9096FE9F71F196AECFFCE45678C25D37C007
+				CHK=1603884A80B9F4A6AA0DCEACA397024A7F81EF2F324F4C5EE5D95F2D58F86069
 				;;
 			aarch64 )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm64.tar.gz"
-				CHK=719C11544A1F6322F2C58F5591FF7ABB7768AEF97EF0A382E3711F89FA2ADE22
+				CHK=865C68AB3A554CBE144FD7576536D3734EC64182B31BB57F3E22818C7337B9CF
 				;;
 			x86_64 )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-x64.tar.gz"
-				CHK=8BEABAC4431B75E9B67C6D9FAFD8B02CC019F21F230EA3D94AEC1348C50529D3
+				CHK=C74AEC522522D31A35BE0CD3424FC091AD4A3680E1780C4F7BF3A76B8216FAB4
 				;;
 			* )
 				false

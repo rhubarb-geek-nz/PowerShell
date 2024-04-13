@@ -1,6 +1,6 @@
 # Maintainer: rhubarb-geek-nz@users.sourceforge.net
 pkgname=powershell
-pkgver=7.4.2
+pkgver=7.3.12
 pkgrel=1
 epoch=
 pkgdesc="PowerShell is an automation and configuration management platform."
@@ -32,15 +32,15 @@ prepare() {
 		case "$arch" in
 			arm* )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm32.tar.gz"
-				CHK=1603884A80B9F4A6AA0DCEACA397024A7F81EF2F324F4C5EE5D95F2D58F86069
+				CHK=BC0F8B567671130C7B314F7244D294AFDAFD2955FC41541631C85F7692164F01
 				;;
 			aarch64 )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-arm64.tar.gz"
-				CHK=865C68AB3A554CBE144FD7576536D3734EC64182B31BB57F3E22818C7337B9CF
+				CHK=F8791B76B16B997E3FD7AED2DE1FAED764E243F7F8546D61DCBF1B7F7FA86E80
 				;;
 			x86_64 )
 				URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell-$pkgver-linux-x64.tar.gz"
-				CHK=C74AEC522522D31A35BE0CD3424FC091AD4A3680E1780C4F7BF3A76B8216FAB4
+				CHK=B7295D9E3ABD10115CE29801E23BB8F711EA91D3EFC049F2D8078CF3003C56F0
 				;;
 			* )
 				false
@@ -60,7 +60,7 @@ prepare() {
 		fi
 
 		URL="https://github.com/PowerShell/PowerShell/releases/download/v$pkgver/powershell_$pkgver-1.deb_amd64.deb"
-		CHK=625B7EE0B71147421723CB6022A41B5D8FC0D6E19DF25B1240008EE491BF6997
+		CHK=8FFA28F6319B3301DC737B5DCE87A0D34EB9A5AB1A449C485BD3CD9BC622E829
 
 		echo Loading "$URL"
 

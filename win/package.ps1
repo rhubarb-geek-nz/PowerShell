@@ -69,13 +69,13 @@ try
 @'
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="$(POWERSHELL_VERSION).0" Manufacturer="Microsoft Corporation" UpgradeCode="31AB5147-9A97-4452-8443-D9709F0516E1">
+  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="$(POWERSHELL_VERSION).0" Manufacturer="Microsoft Corporation" UpgradeCode="1D00683B-0F84-4DB8-A64F-2F98AD42FE06">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell $(POWERSHELL_VERSION) ARM64" Comments="PowerShell $(POWERSHELL_VERSION) ARM64" />
     <MediaTemplate EmbedCab="yes" />
     <Feature Id="ProductFeature" Title="setup" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
-    <Upgrade Id="{31AB5147-9A97-4452-8443-D9709F0516E1}">
+    <Upgrade Id="{1D00683B-0F84-4DB8-A64F-2F98AD42FE06}">
       <UpgradeVersion Maximum="$(POWERSHELL_VERSION).0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
     <InstallExecuteSequence>

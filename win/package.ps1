@@ -33,6 +33,7 @@ trap
 
 $CompanyName = 'Microsoft Corporation'
 $ProductName = 'PowerShell'
+$HyphenSuffix = ''
 
 if ( -not $PowerShellVersion )
 {
@@ -42,6 +43,14 @@ if ( -not $PowerShellVersion )
 	{
 		$PowerShellVersion = $PowerShellVersion.Substring(1)
 	}
+}
+
+$HyphenIndex = $PowerShellVersion.IndexOf('-')
+
+if ($HyphenIndex -gt 1)
+{
+	$HyphenSuffix = $PowerShellVersion.Substring($HyphenIndex)
+	$PowerShellVersion = $PowerShellVersion.Substring(0,$HyphenIndex)
 }
 
 dotnet tool restore
@@ -58,7 +67,7 @@ if ($codeSignCertificate.Count -ne 1)
 	Write-Error "Error with certificate - $CertificateThumbprint"
 }
 
-$PowerShellMsiComments = "$ProductName $PowerShellVersion"
+$PowerShellMsiComments = "$ProductName $PowerShellVersion$HyphenSuffix"
 
 $ArchList = @(
 	@{
@@ -95,10 +104,10 @@ $ArchList = @(
 
 foreach ($Arch in $ArchList)
 {
-	$MsiStem = "PowerShell-$PowerShellVersion-win-$($Arch.Arch)"
+	$MsiStem = "PowerShell-$PowerShellVersion$HyphenSuffix-win-$($Arch.Arch)"
 	$ZipName = "$MsiStem.zip"
 
-	$Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion/$ZipName"
+	$Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion$HyphenSuffix/$ZipName"
 
 	$PublishDir = "$MsiStem.publish"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 #
-#  Copyright 2023, Roger Brown
+#  Copyright 2026, Roger Brown
 #
 #  This file is part of rhubarbi-geek-nz/PowerShell.
 #
@@ -19,7 +19,8 @@
 #
 
 param(
-	$POWERSHELL_VERSION = 'latest'
+	$PowerShellVersion = $null,
+	$CertificateThumbprint = '601A8B683F791E51F647D34AD102C38DA4DDB65F'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -30,18 +31,18 @@ trap
 	throw $PSItem
 }
 
-if ( $POWERSHELL_VERSION -eq 'latest' )
+$CompanyName = 'Microsoft Corporation'
+$ProductName = 'PowerShell'
+
+if ( -not $PowerShellVersion )
 {
-	$POWERSHELL_VERSION = ((Invoke-WebRequest -Uri 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest').Content | ConvertFrom-JSON -AsHashTable)['tag_name']
-	if ($POWERSHELL_VERSION[0] -eq 'v')
+	$PowerShellVersion = ((Invoke-WebRequest -Uri 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest').Content | ConvertFrom-JSON -AsHashTable)['tag_name']
+
+	if ($PowerShellVersion[0] -eq 'v')
 	{
-		$POWERSHELL_VERSION = $POWERSHELL_VERSION.Substring(1)
+		$PowerShellVersion = $PowerShellVersion.Substring(1)
 	}
 }
-
-$ZIPFILE = "PowerShell-$POWERSHELL_VERSION-win-arm64.zip"
-$URL = "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/$ZIPFILE"
-$SRCDIR = "src-$POWERSHELL_VERSION"
 
 dotnet tool restore
 
@@ -50,40 +51,87 @@ If ( $LastExitCode -ne 0 )
 	Exit $LastExitCode
 }
 
-If (Test-Path -LiteralPath $SRCDIR -PathType container)
+$codeSignCertificate = Get-ChildItem -path Cert:\ -Recurse -CodeSigningCert | Where-Object { $_.Thumbprint -eq $CertificateThumbprint }
+
+if ($codeSignCertificate.Count -ne 1)
 {
-	Remove-Item -LiteralPath $SRCDIR -Recurse
+	Write-Error "Error with certificate - $CertificateThumbprint"
 }
 
-If ( -not (Test-Path -LiteralPath $ZIPFILE ))
+$PowerShellMsiComments = "$ProductName $PowerShellVersion"
+
+$ArchList = @(
+	@{
+		Arch = 'x86'
+		UpgradeCode = '1D00683B-0F84-4DB8-A64F-2F98AD42FE06'
+		Win64 = 'no'
+		Platform = 'x86'
+		ProgramFilesFolder = 'ProgramFilesFolder'
+		InstallerVersion = '200'
+		EnvironmentGuid = '9F718501-562E-4C41-97E0-09E93D6698EA'
+		ApplicationShortcutGuid = '2B6CE39E-287B-4B1F-AE34-9AAAB68EF150'
+	},
+	@{
+		Arch = 'x64'
+		UpgradeCode = '31AB5147-9A97-4452-8443-D9709F0516E1'
+		Win64 = 'yes'
+		Platform = 'x64'
+		ProgramFilesFolder = 'ProgramFiles64Folder'
+		InstallerVersion = '200'
+		EnvironmentGuid = '8AC5A84A-6989-4023-BBC9-2CF289952E35'
+		ApplicationShortcutGuid = 'E03DA96F-2A57-49A2-BB95-C1B73768CD17'
+	},
+	@{
+		Arch = 'arm64'
+		UpgradeCode = '75C68AB2-09D8-46B8-B697-D829BDD4C94F'
+		Win64 = 'yes'
+		Platform = 'arm64'
+		ProgramFilesFolder = 'ProgramFiles64Folder'
+		InstallerVersion = '500'
+		EnvironmentGuid = '68AED3CC-F112-4400-8839-6C029532ECDD'
+		ApplicationShortcutGuid = '2E423858-944E-449E-9A78-3506E2964740'
+	}
+)
+
+foreach ($Arch in $ArchList)
 {
-	Write-Host "$URL"
+	$MsiStem = "PowerShell-$PowerShellVersion-win-$($Arch.Arch)"
+	$ZipName = "$MsiStem.zip"
 
-	Invoke-WebRequest -Uri $URL -OutFile $ZIPFILE
-}
+	$Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion/$ZipName"
 
-	Expand-Archive -LiteralPath $ZIPFILE -DestinationPath $SRCDIR
+	$PublishDir = "$MsiStem.publish"
 
-try
-{
+	if (-not (Test-Path -LiteralPath $PublishDir))
+	{
+		If ( -not (Test-Path -LiteralPath $ZipName ))
+		{
+			Write-Host "$Url"
+
+			Invoke-WebRequest -Uri $Url -OutFile $ZipName
+		}
+
+		Expand-Archive -LiteralPath $ZipName -DestinationPath $PublishDir
+	}
+
 @'
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="PowerShell 7 ARM64" Language="1033" Version="$(POWERSHELL_VERSION).0" Manufacturer="Microsoft Corporation" UpgradeCode="1D00683B-0F84-4DB8-A64F-2F98AD42FE06">
-    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" Platform="arm64" Description="PowerShell $(POWERSHELL_VERSION) ARM64" Comments="PowerShell $(POWERSHELL_VERSION) ARM64" />
+  <Product Id="*" Name="$(var.ProductName) ($(var.Platform))" Language="1033" Version="$(var.PowerShellVersion).0" Manufacturer="$(var.CompanyName)" UpgradeCode="$(var.UpgradeCode)">
+    <Package InstallerVersion="$(var.InstallerVersion)" Compressed="yes" InstallScope="perMachine" Platform="$(var.Platform)" Description="$(var.ProductName) $(var.PowerShellVersion) $(var.Platform)" Comments="$(var.PowerShellMsiComments)" />
     <MediaTemplate EmbedCab="yes" />
     <Feature Id="ProductFeature" Title="setup" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
     </Feature>
-    <Upgrade Id="{1D00683B-0F84-4DB8-A64F-2F98AD42FE06}">
-      <UpgradeVersion Maximum="$(POWERSHELL_VERSION).0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
+    <Upgrade Id="{$(var.UpgradeCode)}">
+      <UpgradeVersion Maximum="$(var.PowerShellVersion).0" Property="OLDPRODUCTFOUND" OnlyDetect="no" IncludeMinimum="yes" IncludeMaximum="no" />
     </Upgrade>
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallInitialize" />
       <WriteEnvironmentStrings/>
     </InstallExecuteSequence>
     <DirectoryRef Id="INSTALLDIR">
-      <Component Id ="setEnviroment" Guid="{3517A291-40CB-4770-B134-D9E100AC2699}" Win64="yes">
+      <Component Id ="setEnviroment" Guid="$(var.EnvironmentGuid)" Win64="$(var.Win64)">
         <CreateFolder />
         <Environment Id="PATH" Action="set" Name="PATH" Part="last" Permanent="no" System="yes" Value="[INSTALLDIR]" />
        </Component>
@@ -94,10 +142,10 @@ try
       <ComponentRef Id="pwsh.exe" />
     </Feature>
     <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcut" Guid="{D4A0639B-7BDD-4912-9489-FB8D227D507C}">
+      <Component Id="ApplicationShortcut" Guid="$(var.ApplicationShortcutGuid)">
         <Shortcut Id="ApplicationStartMenuShortcut"
-                  Name="PowerShell 7 (arm64)"
-                  Description="PowerShell $(POWERSHELL_VERSION) for ARM64"
+                  Name="PowerShell 7 ($(var.Platform))"
+                  Description="PowerShell $(var.PowerShellVersion) for $(var.Platform)"
                   Target="[#pwsh.exe]"
                   Arguments="-WorkingDirectory ~"
                   WorkingDirectory="INSTALLDIR"/>
@@ -108,7 +156,7 @@ try
   </Product>
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFiles64Folder">
+      <Directory Id="$(var.ProgramFilesFolder)">
         <Directory Id="INSTALLPRODUCT" Name="PowerShell">
           <Directory Id="INSTALLDIR" Name="7" />
         </Directory>
@@ -120,43 +168,54 @@ try
   </Fragment>
   <Fragment>
     <ComponentGroup Id="ProductComponents">
-      <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="yes">
-        <File Id="pwsh.exe" KeyPath="yes" Source="$(SRCDIR)\pwsh.exe" />
+      <Component Id="pwsh.exe" Guid="*" Directory="INSTALLDIR" Win64="$(var.Win64)">
+        <File Id="pwsh.exe" KeyPath="yes" Source="PublishDir\pwsh.exe" />
       </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>
-'@.Replace('$(POWERSHELL_VERSION)',$POWERSHELL_VERSION).Replace('$(SRCDIR)',$SRCDIR) | dotnet dir2wxs -o "PowerShell.wxs" -s "$SRCDIR"
+'@.Replace('PublishDir',$PublishDir) | dotnet dir2wxs -o "$MsiStem.wxs" -s $PublishDir
 
 	If ( $LastExitCode -ne 0 )
 	{
 		Exit $LastExitCode
 	}
 
-	& "$ENV:WIX/bin/candle.exe" -nologo "PowerShell.wxs" -ext WixUtilExtension 
+	& "$ENV:WIX\bin\candle.exe" `
+			"$MsiStem.wxs" `
+			-nologo `
+			-ext WixUtilExtension `
+			"-dWin64=$($Arch.Win64)" `
+			"-dPlatform=$($Arch.Platform)" `
+			"-dProgramFilesFolder=$($Arch.ProgramFilesFolder)" `
+			"-dUpgradeCode=$($Arch.UpgradeCode)" `
+			"-dInstallerVersion=$($Arch.InstallerVersion)" `
+			"-dEnvironmentGuid=$($Arch.EnvironmentGuid)" `
+			"-dApplicationShortcutGuid=$($Arch.ApplicationShortcutGuid)" `
+			"-dCompanyName=$CompanyName" `
+			"-dProductName=$ProductName" `
+			"-dPowerShellVersion=$PowerShellVersion" `
+			"-dPowerShellMsiComments=$PowerShellMsiComments"
 
 	If ( $LastExitCode -ne 0 )
 	{
 		Exit $LastExitCode
 	}
 
-	& "$ENV:WIX/bin/light.exe" -sw1076 -nologo -cultures:null -out "PowerShell-$POWERSHELL_VERSION-win-arm64.msi" 'PowerShell.wixobj' -ext WixUtilExtension
+	& "$ENV:WIX\bin\light.exe" -sw1076 -nologo -cultures:null -out "$MsiStem.msi" "$MsiStem.wixobj" -ext WixUtilExtension
 
 	If ( $LastExitCode -ne 0 )
 	{
 		Exit $LastExitCode
 	}
 
-	$codeSignCertificate = Get-ChildItem -path Cert:\ -Recurse -CodeSigningCert | Where-Object {$_.Thumbprint -eq '601A8B683F791E51F647D34AD102C38DA4DDB65F'}
+	$null = Set-AuthenticodeSignature -FilePath "$MsiStem.msi" -HashAlgorithm 'SHA256' -Certificate $codeSignCertificate -TimestampServer 'http://timestamp.digicert.com'
 
-	if ( -not $codeSignCertificate )
+	foreach ($WixExt in 'wxs','wixobj','wixpdb')
 	{
-		throw 'Codesign certificate not found'
+		Remove-Item "$MsiStem.$WixExt"
 	}
 
-	Set-AuthenticodeSignature -Certificate $codeSignCertificate -TimestampServer 'http://timestamp.digicert.com' -HashAlgorithm SHA256 -FilePath "PowerShell-$POWERSHELL_VERSION-win-arm64.msi"
-}
-finally
-{
-	Remove-Item -LiteralPath $SRCDIR -Recurse
+	Remove-Item $PublishDir -Recurse
+	Remove-Item $ZipName
 }

@@ -19,7 +19,6 @@
 #
 
 param(
-	$PowerShellVersion = $null,
 	$CertificateThumbprint = '601A8B683F791E51F647D34AD102C38DA4DDB65F'
 )
 
@@ -33,16 +32,7 @@ trap
 
 $CompanyName = 'Microsoft Corporation'
 $ProductName = 'PowerShell'
-
-if ( -not $PowerShellVersion )
-{
-	$PowerShellVersion = ((Invoke-WebRequest -Uri 'https://api.github.com/repos/PowerShell/PowerShell/releases/latest').Content | ConvertFrom-JSON -AsHashTable)['tag_name']
-
-	if ($PowerShellVersion[0] -eq 'v')
-	{
-		$PowerShellVersion = $PowerShellVersion.Substring(1)
-	}
-}
+$PowerShellVersion = '7.7.0'
 
 dotnet tool restore
 
@@ -58,7 +48,7 @@ if ($codeSignCertificate.Count -ne 1)
 	Write-Error "Error with certificate - $CertificateThumbprint"
 }
 
-$PowerShellMsiComments = "$ProductName $PowerShellVersion"
+$PowerShellMsiComments = "$ProductName $PowerShellVersion-preview.2"
 
 $ArchList = @(
 	@{
@@ -95,10 +85,10 @@ $ArchList = @(
 
 foreach ($Arch in $ArchList)
 {
-	$MsiStem = "PowerShell-$PowerShellVersion-win-$($Arch.Arch)"
+	$MsiStem = "PowerShell-$PowerShellVersion-preview.2-win-$($Arch.Arch)"
 	$ZipName = "$MsiStem.zip"
 
-	$Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion/$ZipName"
+	$Url = "https://github.com/PowerShell/PowerShell/releases/download/v$PowerShellVersion-preview.2/$ZipName"
 
 	$PublishDir = "$MsiStem.publish"
 

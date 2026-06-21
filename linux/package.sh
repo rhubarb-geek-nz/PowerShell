@@ -363,7 +363,7 @@ It consists of a cross-platform command-line shell and associated scripting lang
 %defattr(-,root,root)
 /opt/microsoft/powershell/7
 /usr/bin/pwsh
-/usr/local/share/man/man1/pwsh.1.gz
+/usr/share/man/man1/pwsh.1.gz
 
 %clean
 EOF

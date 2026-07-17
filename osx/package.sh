@@ -52,7 +52,10 @@ rm "$FULLNAME.original"
 
 	cd root
 
-	gunzip < "../data/$PKGNAME-$VERSION.pkg/Payload" | cpio -i
+	for d in  ../data/*.pkg/Payload
+	do
+		gunzip < "$d" | cpio -i
+	done
 )
 
 cc launcher.c -Wall -Werror -arch arm64 -o "root/$LAUNCHER"
@@ -64,7 +67,6 @@ pkgbuild \
 	--version "$VERSION" \
 	--root root \
 	--install-location / \
-	--sign "Developer ID Installer: $APPLE_DEVELOPER" \
 	"$PKGNAME.pkg"
 
 cat > distribution.xml <<EOF
@@ -90,5 +92,4 @@ productbuild \
 	--distribution ./distribution.xml \
 	--product requirements.plist \
 	--package-path . \
-	"$FULLNAME" \
-	--sign "Developer ID Installer: $APPLE_DEVELOPER"
+	"$FULLNAME"

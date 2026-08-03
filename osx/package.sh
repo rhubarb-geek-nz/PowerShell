@@ -62,11 +62,14 @@ cc launcher.c -Wall -Werror -arch arm64 -o "root/$LAUNCHER"
 
 strip "root/$LAUNCHER"
 
+codesign --sign "Developer ID Application: $APPLE_DEVELOPER" "root/$LAUNCHER"
+
 pkgbuild \
 	--identifier $IDENTIFIER \
 	--version "$VERSION" \
 	--root root \
 	--install-location / \
+	--sign "Developer ID Installer: $APPLE_DEVELOPER" \
 	"$PKGNAME.pkg"
 
 cat > distribution.xml <<EOF
@@ -92,4 +95,5 @@ productbuild \
 	--distribution ./distribution.xml \
 	--product requirements.plist \
 	--package-path . \
-	"$FULLNAME"
+	"$FULLNAME" \
+	--sign "Developer ID Installer: $APPLE_DEVELOPER"
